@@ -6,6 +6,9 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "mutex.h"
+
+extern Ptable ptable;
 
 int
 sys_fork(void)
@@ -103,4 +106,52 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+/**
+ * System call to aquire lock
+*/
+int sys_macquire(void)
+{
+    //get mutex
+    mutex* m;
+    if (argint(0, (int*)&m) < 0)
+    {
+        //error return
+        return -1;
+    }
+
+    //aquire lock
+    while (xchg((volatile uint*)&(m->locked), 1) != 0)
+    {
+        //sleep thread
+        acquire(&ptable.lock);
+        sleep(m->_chan, &ptable.lock);
+        release(&ptable.lock);
+    }
+
+    //return success
+    return 0;
+}
+
+/**
+ * System call to release lock
+*/
+int sys_mrelease(void)
+{
+    //get mutex
+    mutex* m;
+    if (argint(0, (int*)&m) < 0)
+    {
+        //error return
+        return -1;
+    }
+
+    //wakeup all waiting
+    wakeup(m->_chan);
+    //unlock
+    m->locked = 0;
+
+    //return success
+    return 0;
 }

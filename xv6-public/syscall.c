@@ -104,6 +104,9 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_clone(void);
+extern int sys_minit(void);
+extern int sys_macquire(void);
+extern int sys_mrelease(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -128,6 +131,9 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_clone]   sys_clone,
+[SYS_minit]   sys_minit,
+[SYS_macquire] sys_macquire,
+[SYS_mrelease] sys_mrelease,
 };
 
 void
