@@ -410,7 +410,7 @@ scheduler(void)
     acquire(&ptable.lock);
 
     //find highest priority process
-    int nice = 19;
+    int nice = 21;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
       if ((p->state == RUNNABLE) && (p->nice < nice))
@@ -418,7 +418,7 @@ scheduler(void)
         nice = p->nice;
       }
     }
-    
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if((p->state != RUNNABLE) || (p->nice != nice))
         continue;

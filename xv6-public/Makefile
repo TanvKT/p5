@@ -27,7 +27,6 @@ OBJS = \
 	uart.o\
 	vectors.o\
 	vm.o\
-	mutex.o\
 	grade.o\
 
 # Cross-compiling (e.g., on Mac OS X)

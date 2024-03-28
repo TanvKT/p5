@@ -8,7 +8,9 @@
 #include "proc.h"
 #include "mutex.h"
 
+//globals
 extern Ptable ptable;
+void* chan = (void*)0x1000;
 
 int
 sys_fork(void)
@@ -109,6 +111,31 @@ sys_uptime(void)
 }
 
 /**
+ * System call to initialize lock
+*/
+int sys_minit(void)
+{
+    //get mutex
+    mutex* m;
+    if (argint(0, (int*)&m) < 0)
+    {
+        //error return
+        return -1;
+    }
+
+    acquire(&ptable.lock);
+    m->locked = 0;
+    m->_chan = chan;
+    m->proc = 0x0;
+    m->old_nice = 21;
+    chan++;
+    release(&ptable.lock);
+    
+    //return success
+    return 0;
+}
+
+/**
  * System call to aquire lock
 */
 int sys_macquire(void)
@@ -124,11 +151,31 @@ int sys_macquire(void)
     //aquire lock
     while (xchg((volatile uint*)&(m->locked), 1) != 0)
     {
-        //sleep thread
+        //check if lock fully aquired
+        while (m->proc == 0x0)
+        {
+          yield();
+        }
         acquire(&ptable.lock);
+
+        //elevate nice of holding process
+        if (myproc()->nice < ((struct proc*)m->proc)->nice)
+        {
+          ((struct proc*)m->proc)->nice = myproc()->nice;
+        }
+
+        //sleep thread
         sleep(m->_chan, &ptable.lock);
         release(&ptable.lock);
     }
+
+    acquire(&ptable.lock);
+    //record pid of holding process
+    m->proc = (int)myproc();
+
+    //record old nice value
+    m->old_nice = myproc()->nice;
+    release(&ptable.lock);
 
     //return success
     return 0;
@@ -147,6 +194,10 @@ int sys_mrelease(void)
         return -1;
     }
 
+    acquire(&ptable.lock);
+    ((struct proc*)m->proc)->nice = m->old_nice;
+    m->proc = 0x0;
+    release(&ptable.lock);
     //wakeup all waiting
     wakeup(m->_chan);
     //unlock
