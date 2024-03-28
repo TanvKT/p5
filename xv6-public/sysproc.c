@@ -155,3 +155,41 @@ int sys_mrelease(void)
     //return success
     return 0;
 }
+
+/**
+ * System call to update nice value
+*/
+int sys_nice(void)
+{
+  //get inc val
+  int inc;
+  if (argint(0, &inc) < 0)
+  {
+    //error return
+    return -1;
+  }
+
+  struct proc* p = myproc();
+
+  //aquire lock so scheduler cannot prempt while changing nice value
+  acquire(&ptable.lock);
+
+  //change nice value
+  p->nice += inc;
+
+  //check bounds
+  if (p->nice > 19)
+  {
+    p->nice = 19;
+  }
+  else if (p->nice < -20)
+  {
+    p->nice = -20;
+  }
+
+  //release lock
+  release(&ptable.lock);
+
+  //return success
+  return 0;
+}

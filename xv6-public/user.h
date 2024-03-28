@@ -29,6 +29,7 @@ int clone(void (*)(void*), void*, void*);
 void minit(mutex* m);
 void macquire(mutex* m);
 void mrelease(mutex* m);
+int nice(int inc);
 
 // ulib.c
 int stat(const char*, struct stat*);

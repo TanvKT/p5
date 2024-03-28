@@ -93,6 +93,7 @@ found:
   p->nclone = 0;
   p->sleepticks = -1;
   p->chan = 0;
+  p->nice = 0;
 
   release(&ptable.lock);
 
@@ -217,6 +218,8 @@ fork(void)
 
   pid = np->pid;
 
+  np->nice = curproc->nice;
+
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
@@ -282,6 +285,8 @@ clone(void (*fn)(void*), void* stack, void* arg)
   np->nclone++;
 
   pid = np->pid;
+
+  np->nice = 0;
 
   acquire(&ptable.lock);
 
@@ -403,9 +408,21 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    //find highest priority process
+    int nice = 19;
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
+      if ((p->state == RUNNABLE) && (p->nice < nice))
+      {
+        nice = p->nice;
+      }
+    }
+    
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+      if((p->state != RUNNABLE) || (p->nice != nice))
         continue;
+      
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it

@@ -24,3 +24,4 @@
 #define SYS_minit  23
 #define SYS_macquire 24
 #define SYS_mrelease 25
+#define SYS_nice   26
