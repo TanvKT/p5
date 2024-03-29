@@ -149,7 +149,7 @@ int sys_macquire(void)
     }
 
     //aquire lock
-    while (xchg((volatile uint*)&(m->locked), 1) != 0)
+    while (m->locked != 0)
     {
         //check if lock fully aquired
         while (m->proc == 0x0)
@@ -172,6 +172,7 @@ int sys_macquire(void)
     acquire(&ptable.lock);
     //record pid of holding process
     m->proc = (int)myproc();
+    m->locked = 1;
 
     //record old nice value
     m->old_nice = myproc()->nice;
