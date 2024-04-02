@@ -94,6 +94,7 @@ found:
   p->sleepticks = -1;
   p->chan = 0;
   p->nice = 0;
+  p->mutex_num = 0;
 
   release(&ptable.lock);
 
@@ -219,6 +220,11 @@ fork(void)
   pid = np->pid;
 
   np->nice = curproc->nice;
+  np->mutex_num = curproc->mutex_num;
+  for (int i = 0; i < curproc->mutex_num; i++)
+  {
+    np->mutex[i] = curproc->mutex[i];
+  }
 
   acquire(&ptable.lock);
 
@@ -287,6 +293,7 @@ clone(void (*fn)(void*), void* stack, void* arg)
   pid = np->pid;
 
   np->nice = 0;
+  np->mutex_num = 0;
 
   acquire(&ptable.lock);
 
